@@ -7,7 +7,7 @@ case:
   tags: [postgres, jsonl, tls, smoke]
 
 services:
-  - image: images/postgres-15
+  - image: images/lab-postgres-15
     alias: pg
     env:
       - LOADSMITH_ENABLE_SSL=on

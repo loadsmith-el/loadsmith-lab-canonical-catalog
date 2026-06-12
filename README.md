@@ -1,4 +1,4 @@
-# loadsmith-lab-catalog
+# loadsmith-lab-canonical-catalog
 
 The **`catalog` origin** for [loadsmith-lab](../loadsmith-lab): test cases and
 bundles for [Loadsmith](../loadsmith). This repo ships no code — just
@@ -48,13 +48,13 @@ It's consumed by `loadsmith-lab` as an origin — register it once (local dev:
 read live, no install):
 
 ```bash
-loadsmith-lab origin local add catalog ../loadsmith-lab-catalog
+loadsmith-lab origin local add catalog ../loadsmith-lab-canonical-catalog
 loadsmith-lab run --local --select catalog/postgres-to-jsonl
 loadsmith-lab bundle run --local --select catalog/parquet-destination
 ```
 
 A case's `services[].image` references an image from the
-[`loadsmith-lab-images`](../loadsmith-lab-images) repo as `images/<name>`.
+[`loadsmith-lab-canonical-images`](../loadsmith-lab-canonical-images) repo as `images/<name>`.
 
 ## Writing a case or bundle
 

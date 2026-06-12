@@ -38,8 +38,8 @@ Don't guess at "why" — go read it.
   seed, so a TCP-only check races. Mirror the `postgres:` probe block in
   `cases/postgres-to-jsonl/case.yaml`.
 - **A case's `services[].image` is an `<origin>/<name>` reference** (e.g.
-  `images/postgres-15`), resolved against
-  [`loadsmith-lab-images`](../loadsmith-lab-images). If a case needs a new
+  `images/lab-postgres-15`), resolved against
+  [`loadsmith-lab-canonical-images`](../loadsmith-lab-canonical-images). If a case needs a new
   image, add it there — not here.
 - **Bundles never modify the cases they sequence** — a bundle only chains and
   wraps existing cases (which stay runnable standalone via `run --select`) with
@@ -53,7 +53,7 @@ This repo has no build step. Verify a case or bundle by running it through the
 
 ```bash
 cd ../loadsmith-lab
-./target/debug/loadsmith-lab origin local add catalog ../loadsmith-lab-catalog   # once
+./target/debug/loadsmith-lab origin local add catalog ../loadsmith-lab-canonical-catalog   # once
 ./target/debug/loadsmith-lab run --local --select catalog/<name>
 ./target/debug/loadsmith-lab bundle run --local --select catalog/<bundle-name>
 ```

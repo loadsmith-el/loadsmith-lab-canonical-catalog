@@ -4,7 +4,7 @@ case:
   tags: [postgres, jsonl, smoke]
 
 services:
-  - image: images/postgres-15
+  - image: images/lab-postgres-15
     alias: pg
     readiness:
       tcp: 5432
