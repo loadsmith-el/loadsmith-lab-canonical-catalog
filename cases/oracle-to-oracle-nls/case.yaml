@@ -1,0 +1,42 @@
+case:
+  name: oracle-to-oracle-nls
+  description: >
+    Loads 100k rows Oracle→Oracle with the engine environment set to a
+    comma-decimal locale (NLS_LANG=GERMAN_GERMANY.AL32UTF8). Numbers cross the
+    connector as text, so a hostile NLS_NUMERIC_CHARACTERS is the classic way to
+    corrupt NUMBER values. Decimal fidelity is checked out-of-band against the
+    source (the harness asserts row counts only).
+    CAVEAT: written for the old ODPI-C build, where NLS_LANG reached the
+    session. The pure-Rust thin driver ignores NLS_LANG, so this case no longer
+    applies the hostile locale; it stays as a regression guard. Real coverage
+    needs a server-side NLS override (e.g. a logon trigger in the lab-oracle
+    fixture setting NLS_NUMERIC_CHARACTERS = ',.'); the connector's pin runs
+    after logon and must win.
+  tags: [oracle, destination, nls, smoke]
+
+services:
+  - image: images/lab-oracle
+    alias: oracle
+    readiness:
+      tcp: 1521
+      timeout_seconds: 600
+      oracle:
+        service_name: FREEPDB1
+        user: lab
+        password: lab
+        # Gate on the events_sink PK (created late in init.sql), so the dest
+        # table exists before the case connects.
+        probe_query: "SELECT 1 FROM user_constraints WHERE constraint_name = 'PK_SINK'"
+
+loadsmith:
+  # Force a comma-decimal client locale to stress the text↔NUMBER conversions.
+  env:
+    - NLS_LANG=GERMAN_GERMANY.AL32UTF8
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 100000
+  rows_written: 100000

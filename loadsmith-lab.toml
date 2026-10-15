@@ -18,9 +18,13 @@ mysql-to-mysql                      = "Loads 100k rows into MySQL (atomic mode) 
 mysql-to-mysql-staged-merge         = "Loads 100k rows into MySQL via staged_merge (ON DUPLICATE KEY upsert by id)"
 sharepoint-file-to-jsonl            = "Downloads a CSV from a mock Microsoft Graph, normalizes columns, writes JSONL (file-mode smoke test)"
 sharepoint-list-to-jsonl            = "Reads a paginated SharePoint List from a mock Microsoft Graph and writes JSONL (list-mode + pagination smoke test)"
-# Oracle cases moved out of canon to loadsmith-oracle-plugins/lab (native ODPI-C
-# connector). They reference the lab-oracle DB fixture cross-origin; the fixture
-# image stays in loadsmith-lab-canonical-images.
+oracle-to-jsonl                     = "Reads 100k rows from Oracle and writes them to JSONL (content/type smoke test)"
+oracle-to-jsonl-tls                 = "Reads 100k rows from Oracle over TCPS (chain + hostname verified, PEM wallet)"
+oracle-to-jsonl-incremental         = "Incremental watermark read (cursor event_sequence > 50000) — reads the upper 50k"
+oracle-to-oracle                    = "Loads 100k rows into Oracle (atomic mode) — destination smoke test"
+oracle-to-oracle-staged-merge       = "Loads 100k rows into Oracle via staged_merge (staging GTT + one MERGE upsert by id)"
+oracle-to-oracle-lob                = "Round-trips RAW/BLOB/CLOB columns Oracle→Oracle — binary/LOB type coverage"
+oracle-to-oracle-nls                = "Loads with a comma-decimal NLS_LANG — regression guard (the thin driver ignores NLS_LANG)"
 
 [bundles]
 parquet-destination = "Validates the parquet destination in single-file and chunked modes"

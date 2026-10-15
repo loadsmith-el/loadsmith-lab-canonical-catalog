@@ -1,0 +1,47 @@
+case:
+  name: oracle-to-jsonl-tls
+  description: >
+    Reads 100k rows from Oracle over TLS (TCPS) and writes them to JSONL.
+    Exercises the thin driver's rustls TLS path against a real encrypted
+    endpoint: the connector connects via PROTOCOL=TCPS and fully verifies the
+    server (chain + hostname "oracle" against the SAN) using the lab CA supplied
+    as a PEM wallet (wallet/ewallet.pem).
+
+    The TLS endpoint is an stunnel terminator baked into the lab-oracle image
+    (LOADSMITH_ENABLE_TLS=on enables it on 2484, forwarding to the plaintext TNS
+    listener on 1521); see loadsmith-lab-canonical-images/images/lab-oracle/README.md
+    § TLS. The PEM wallet is a copy of the lab CA (see wallet/generate.sh),
+    mounted at /wallet. The lab leaf cert's SAN covers the alias "oracle".
+  tags: [oracle, jsonl, tls, smoke]
+
+services:
+  - image: images/lab-oracle
+    alias: oracle
+    env:
+      - LOADSMITH_ENABLE_TLS=on   # start the stunnel TLS terminator on :2484
+    readiness:
+      # The connector reaches Oracle through the stunnel TLS terminator on 2484,
+      # not the plaintext 1521 — so gate on 2484. stunnel's start hook runs in
+      # startdb.d, i.e. AFTER init.sql finishes loading the seed, so 2484 being
+      # open implies the data is loaded too. (The plaintext oracle SQL probe can't
+      # run here — it would need to speak TLS on 2484; the tcp gate is enough.)
+      tcp: 2484
+      timeout_seconds: 600
+
+loadsmith:
+  # Mount the PEM wallet (ewallet.pem = the lab CA) the driver verifies against.
+  # `host` is relative to this case dir; the runner resolves it (see VolumeMount).
+  volumes:
+    - host: wallet
+      container: /wallet
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 100000
+  rows_written: 100000
+  output:
+    file: events.jsonl
+    row_count: 100000

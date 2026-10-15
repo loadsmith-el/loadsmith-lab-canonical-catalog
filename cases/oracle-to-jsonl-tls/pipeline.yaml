@@ -1,0 +1,28 @@
+pipeline:
+  name: oracle-to-jsonl-tls
+  description: Telemetry export over TCPS (fully verified) — oracledb rustls TLS
+
+# NOTE — TLS on the thin driver is rustls: the server is verified against the
+# webpki roots plus every cert in `<wallet_dir>/ewallet.pem` (a PEM "wallet" —
+# here, a copy of the lab CA). Hostname verification is always on: the lab leaf
+# cert's SAN includes the alias "oracle". A binary cwallet.sso is not read.
+
+source:
+  type: oracle
+  config:
+    host: oracle
+    port: 2484               # stunnel TLS terminator → plaintext TNS on 1521
+    service_name: FREEPDB1
+    user: lab
+    password: lab
+    query: "SELECT * FROM spacecraft_telemetry_events ORDER BY event_sequence"
+    batch_size: 2000
+    tls:
+      enabled: true
+      # Directory holding ewallet.pem (the lab CA, PEM).
+      wallet_dir: /wallet
+
+destination:
+  type: jsonl
+  config:
+    path: /output/events.jsonl
