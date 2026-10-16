@@ -8,3 +8,4 @@ bundle:
 cases:
   - case: catalog/postgres-to-jsonl-tls-require
   - case: catalog/mysql-to-jsonl-tls-require
+  - case: catalog/oracle-to-jsonl-tls

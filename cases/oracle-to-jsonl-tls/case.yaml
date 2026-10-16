@@ -3,15 +3,15 @@ case:
   description: >
     Reads 100k rows from Oracle over TLS (TCPS) and writes them to JSONL.
     Exercises the thin driver's rustls TLS path against a real encrypted
-    endpoint: the connector connects via PROTOCOL=TCPS and fully verifies the
-    server (chain + hostname "oracle" against the SAN) using the lab CA supplied
-    as a PEM wallet (wallet/ewallet.pem).
+    endpoint: `tls.mode: verify-full` makes the connector use PROTOCOL=TCPS and
+    fully verify the server (chain + hostname "oracle" against the SAN) against
+    the lab CA passed inline as `root_cert` (tls/ca.crt).
 
     The TLS endpoint is an stunnel terminator baked into the lab-oracle image
     (LOADSMITH_ENABLE_TLS=on enables it on 2484, forwarding to the plaintext TNS
     listener on 1521); see loadsmith-lab-canonical-images/images/lab-oracle/README.md
-    § TLS. The PEM wallet is a copy of the lab CA (see wallet/generate.sh),
-    mounted at /wallet. The lab leaf cert's SAN covers the alias "oracle".
+    § TLS. tls/ca.crt is a copy of the lab CA (see tls/generate.sh),
+    mounted at /tls. The lab leaf cert's SAN covers the alias "oracle".
   tags: [oracle, jsonl, tls, smoke]
 
 services:
@@ -29,11 +29,11 @@ services:
       timeout_seconds: 600
 
 loadsmith:
-  # Mount the PEM wallet (ewallet.pem = the lab CA) the driver verifies against.
+  # Mount the lab CA; the pipeline inlines it as tls.root_cert via file().
   # `host` is relative to this case dir; the runner resolves it (see VolumeMount).
   volumes:
-    - host: wallet
-      container: /wallet
+    - host: tls
+      container: /tls
 
 pipeline:
   file: pipeline.yaml

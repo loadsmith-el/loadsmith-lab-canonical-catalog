@@ -7,7 +7,7 @@ from its own `Dockerfile`, so no host Python or other dependencies are required.
 | Bundle | Description |
 |---|---|
 | `parquet-destination` | Validates the parquet destination in single-file and chunked modes |
-| `tls-spike` | Validates the rustls + rustls-rustcrypto TLS stack against real database servers (postgres + mysql) |
+| `tls-spike` | Validates the rustls + rustls-rustcrypto TLS stack against real database servers (postgres + mysql + oracle) |
 
 ## Bundles never modify their cases
 

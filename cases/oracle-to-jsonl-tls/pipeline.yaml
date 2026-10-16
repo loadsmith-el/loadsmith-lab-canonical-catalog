@@ -2,10 +2,10 @@ pipeline:
   name: oracle-to-jsonl-tls
   description: Telemetry export over TCPS (fully verified) — oracledb rustls TLS
 
-# NOTE — TLS on the thin driver is rustls: the server is verified against the
-# webpki roots plus every cert in `<wallet_dir>/ewallet.pem` (a PEM "wallet" —
-# here, a copy of the lab CA). Hostname verification is always on: the lab leaf
-# cert's SAN includes the alias "oracle". A binary cwallet.sso is not read.
+# TLS uses the canon's shared `tls` block. The oracledb thin driver always
+# verifies the chain AND the host name, so `verify-full` is the mode that runs
+# TLS (prefer/require/verify-ca are rejected). The lab CA is mounted at /tls and
+# inlined with file(); the lab leaf cert's SAN includes the alias "oracle".
 
 source:
   type: oracle
@@ -18,9 +18,8 @@ source:
     query: "SELECT * FROM spacecraft_telemetry_events ORDER BY event_sequence"
     batch_size: 2000
     tls:
-      enabled: true
-      # Directory holding ewallet.pem (the lab CA, PEM).
-      wallet_dir: /wallet
+      mode: verify-full
+      root_cert: "{{ file('/tls/ca.crt') }}"   # the lab CA (PEM)
 
 destination:
   type: jsonl
