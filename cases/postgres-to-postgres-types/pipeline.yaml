@@ -1,0 +1,34 @@
+pipeline:
+  name: postgres-to-postgres-types
+
+source:
+  type: postgres
+  config:
+    host: pg
+    port: 5432
+    dbname: lab
+    user: lab
+    password: lab
+    query: >
+      SELECT id, c_int2, c_int4, c_int8, c_float4, c_float8, c_numeric,
+             c_numeric_10_2, c_bool, c_text, c_varchar, c_char, c_date, c_timestamp,
+             c_timestamptz, c_time, c_timetz, c_interval, c_uuid, c_json, c_jsonb,
+             c_inet, c_bytea
+      FROM type_coverage ORDER BY id
+    session:
+      TimeZone: Asia/Kolkata
+
+destination:
+  type: postgres
+  config:
+    host: pg
+    port: 5432
+    dbname: lab
+    user: lab
+    password: lab
+    target_table: type_coverage_sink
+    mode: atomic
+    # A different zone on the write side: a timestamptz must still land on the
+    # same instant (the destination sends it with an explicit +00 offset).
+    session:
+      TimeZone: America/Sao_Paulo

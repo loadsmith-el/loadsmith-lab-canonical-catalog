@@ -1,0 +1,7 @@
+bundle:
+  name: postgres-types
+  description: Validates the postgres source's type decoding value-by-value (Parquet output checked with pyarrow)
+
+cases:
+  - case: catalog/postgres-to-parquet-types
+    validate: /scripts/check_types.py

@@ -1,0 +1,32 @@
+case:
+  name: postgres-to-parquet-types
+  description: >
+    Type coverage for the postgres source: reads the 4-row type_coverage fixture
+    (numeric, timestamptz, BC dates, NaN/Infinity, uuid/json/inet/interval,
+    bytea, arrays of int/text/numeric/date/timestamptz/bytea, an all-NULL row)
+    and writes Parquet, which keeps the Arrow types (incl. the timestamptz UTC
+    zone). The session runs in a non-UTC TimeZone (Asia/Kolkata, +05:30 and a
+    +05:53:28 LMT offset for year 1) so offsets must be parsed, not assumed.
+    Values are asserted by the postgres-types bundle's validate hook.
+  tags: [postgres, parquet, types, smoke]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        # The fixture's last statement inserts the rows; id=4 is the last one.
+        probe_query: "SELECT 1 FROM type_coverage WHERE id = 4"
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 4
+  rows_written: 4

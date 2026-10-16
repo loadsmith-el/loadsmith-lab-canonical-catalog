@@ -1,0 +1,23 @@
+pipeline:
+  name: postgres-to-parquet-types
+
+source:
+  type: postgres
+  config:
+    host: pg
+    port: 5432
+    dbname: lab
+    user: lab
+    password: lab
+    query: "SELECT * FROM type_coverage ORDER BY id"
+    # timestamptz is rendered in the session TimeZone — a non-UTC, non-whole-hour
+    # zone proves the connector parses the offset and normalizes to UTC.
+    session:
+      TimeZone: Asia/Kolkata
+
+destination:
+  type: parquet
+  config:
+    path: /output
+    prefix: types
+    compression: snappy

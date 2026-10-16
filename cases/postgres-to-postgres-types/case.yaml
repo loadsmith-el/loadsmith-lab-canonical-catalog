@@ -1,0 +1,30 @@
+case:
+  name: postgres-to-postgres-types
+  description: >
+    Round-trips the scalar columns of the type_coverage fixture Postgres→Postgres
+    (atomic COPY into type_coverage_sink): timestamptz (session in a non-UTC
+    TimeZone), BC dates, NaN/Infinity, numeric, bytea, uuid/json/inet/interval
+    and an all-NULL row. A value the destination encodes wrongly makes COPY fail
+    the load. (Array columns are excluded: the destination doesn't write Arrow
+    List columns yet.)
+  tags: [postgres, destination, types, smoke]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM type_coverage WHERE id = 4"
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 4
+  rows_written: 4

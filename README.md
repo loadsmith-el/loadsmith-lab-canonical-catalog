@@ -36,6 +36,8 @@ add content — that manifest is what `loadsmith-lab list`/`bundle list` and
 | `postgres-to-parquet-chunked` | Reads 100k rows and writes multiple chunked Parquet files |
 | `postgres-to-parquet-localcopy` | Chunked Parquet to a staging dir, delivered via the local-copy sink |
 | `postgres-to-parquet-localcopy-resume` | Crashes the sink mid-delivery and asserts the core respawns it and delivers every chunk |
+| `postgres-to-parquet-types` | Type coverage: `timestamptz` (non-UTC session), BC dates, NaN, `numeric`, arrays, an all-NULL row → Parquet (values asserted by the `postgres-types` bundle) |
+| `postgres-to-postgres-types` | Round-trips the `type_coverage` scalar columns Postgres→Postgres (atomic COPY, non-UTC sessions on both sides) |
 | `mysql-to-jsonl` | Reads 100k rows from MySQL and writes them to JSONL (content/type smoke test) |
 | `mysql-to-jsonl-native` | Reads 100k rows from MySQL via the legacy `mysql_native_password` auth plugin — auth-mode coverage |
 | `mysql-to-jsonl-tls-require` | Reads 100k rows from MySQL over TLS (`mode: require`) — rustls handshake validation |
@@ -56,6 +58,7 @@ add content — that manifest is what `loadsmith-lab list`/`bundle list` and
 | Bundle | Description |
 |---|---|
 | `parquet-destination` | Validates the parquet destination in single-file and chunked modes |
+| `postgres-types` | Validates the postgres source's type decoding value-by-value (Parquet checked with pyarrow) |
 | `tls-spike` | Validates the rustls + rustls-rustcrypto TLS stack against real database servers (postgres + mysql + oracle) |
 
 ## Using this repo
