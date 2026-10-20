@@ -21,4 +21,4 @@ destination:
     user: lab
     password: lab
     target_table: lob_roundtrip_sink
-    mode: atomic
+    mode: append

@@ -21,5 +21,5 @@ destination:
     user: lab
     password: lab
     target_table: events_sink
-    mode: staged_merge
+    mode: merge
     merge_key: [id]

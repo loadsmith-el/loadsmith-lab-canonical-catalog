@@ -32,4 +32,4 @@ destination:
     user: lab
     password: lab
     target_table: type_coverage_sink
-    mode: atomic
+    mode: append

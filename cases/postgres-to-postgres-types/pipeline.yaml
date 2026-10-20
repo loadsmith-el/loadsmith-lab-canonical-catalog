@@ -27,7 +27,7 @@ destination:
     user: lab
     password: lab
     target_table: type_coverage_sink
-    mode: atomic
+    mode: append
     # A different zone on the write side: a timestamptz must still land on the
     # same instant (the destination sends it with an explicit +00 offset).
     session:

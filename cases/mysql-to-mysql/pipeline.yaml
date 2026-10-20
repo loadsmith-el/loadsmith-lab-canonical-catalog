@@ -21,4 +21,4 @@ destination:
     user: lab
     password: lab
     target_table: events_sink
-    mode: atomic
+    mode: append
