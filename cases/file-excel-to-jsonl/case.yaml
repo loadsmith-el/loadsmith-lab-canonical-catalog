@@ -1,0 +1,25 @@
+case:
+  name: file-excel-to-jsonl
+  description: >
+    The excel parser on two xlsx workbooks listed by the file raw source: the
+    `data` sheet by name, one banner row skipped, types inferred over the
+    whole sheet (float64, utf8, boolean, timestamp(ms)) and one JSONL file out.
+  tags: [file, excel, parser, jsonl, smoke]
+
+services: []
+
+loadsmith:
+  volumes:
+    - host: data
+      container: /data
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 6
+  rows_written: 6
+  output:
+    file: orders.jsonl
+    row_count: 6

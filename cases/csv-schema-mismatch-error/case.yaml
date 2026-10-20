@@ -1,0 +1,25 @@
+case:
+  name: csv-schema-mismatch-error
+  description: >
+    Two CSV files whose inferred schemas differ (amount is int64 in the first,
+    utf8 in the second) fail the run with SCHEMA_MISMATCH (exit 1): one parser
+    stream has one schema. Declaring `columns:` is the fix.
+  tags: [file, csv, parser, error]
+
+services: []
+
+loadsmith:
+  volumes:
+    - host: data
+      container: /data
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: error
+  exit_code: 1
+  logs:
+    contains:
+      - "SCHEMA_MISMATCH"
+      - "column 2 (`amount`) is utf8, the stream has int64"

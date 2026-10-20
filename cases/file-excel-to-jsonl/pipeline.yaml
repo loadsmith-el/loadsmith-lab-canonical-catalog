@@ -1,0 +1,19 @@
+pipeline:
+  name: file-excel-to-jsonl
+
+source:
+  type: file
+  config:
+    path: /data
+    glob: "*.xlsx"
+
+parser:
+  type: excel
+  config:
+    sheet: data
+    skip_rows: 1
+
+destination:
+  type: jsonl
+  config:
+    path: /output/orders.jsonl

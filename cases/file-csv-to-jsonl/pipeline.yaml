@@ -1,0 +1,20 @@
+pipeline:
+  name: file-csv-to-jsonl
+
+source:
+  type: file
+  config:
+    path: /data
+    glob: "*.csv"
+    recursive: true
+
+parser:
+  type: csv
+  config:
+    header: true
+    batch_size: 2
+
+destination:
+  type: jsonl
+  config:
+    path: /output/people.jsonl

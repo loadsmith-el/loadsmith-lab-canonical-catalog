@@ -1,0 +1,16 @@
+pipeline:
+  name: csv-schema-mismatch-error
+
+source:
+  type: file
+  config:
+    path: /data
+    glob: "*.csv"
+
+parser:
+  type: csv
+
+destination:
+  type: jsonl
+  config:
+    path: /output/out.jsonl

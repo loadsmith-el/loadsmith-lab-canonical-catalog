@@ -1,0 +1,33 @@
+case:
+  name: csv-to-postgres
+  description: >
+    Two semicolon-separated windows-1252 CSV files (CRLF and LF line ends,
+    differently spelled headers) through the csv parser with declared columns
+    (int32, int64, float64, bool, utf8, date32, timestamp(ms)) into a subset of
+    the columns of type_coverage_sink (atomic COPY with a column list).
+  tags: [file, csv, parser, postgres, destination, smoke]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM type_coverage WHERE id = 4"
+
+loadsmith:
+  volumes:
+    - host: data
+      container: /data
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 5
+  rows_written: 5

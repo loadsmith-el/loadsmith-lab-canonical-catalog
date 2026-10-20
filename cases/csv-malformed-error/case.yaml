@@ -1,0 +1,26 @@
+case:
+  name: csv-malformed-error
+  description: >
+    A ragged CSV (a record with fewer fields than the header) fails the run
+    (exit 1) in the csv parser, which names the file and the line; nothing is
+    committed — the JSONL destination is cancelled, though the first, valid
+    file was already parsed.
+  tags: [file, csv, parser, error]
+
+services: []
+
+loadsmith:
+  volumes:
+    - host: data
+      container: /data
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: error
+  exit_code: 1
+  logs:
+    contains:
+      - "bad.csv"
+      - "line 3: 2 fields, expected 3"

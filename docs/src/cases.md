@@ -29,6 +29,11 @@ a readiness probe and an `expect` block asserting the outcome.
 | `oracle-to-oracle-nls` | Loads with a comma-decimal `NLS_LANG` — regression guard only (the thin driver ignores `NLS_LANG`) |
 | `sharepoint-file-to-jsonl` | Downloads a CSV from a mock Microsoft Graph, normalizes columns, writes JSONL (file-mode smoke test) |
 | `sharepoint-list-to-jsonl` | Reads a paginated SharePoint List from a mock Microsoft Graph and writes JSONL (list-mode + pagination smoke test) |
+| `file-csv-to-jsonl` | Parser stage: the `file` raw source (recursive glob, non-matching files skipped) + the `csv` parser (inferred schema, empty cells as nulls) → JSONL |
+| `csv-to-postgres` | Parser stage: `;`-separated windows-1252 CSVs with declared columns → Postgres `type_coverage_sink` (atomic COPY with a column list) |
+| `csv-malformed-error` | Parser stage: a ragged CSV row fails the run (exit 1); the error names the file and line |
+| `csv-schema-mismatch-error` | Parser stage: a later file whose inferred schema differs fails with `SCHEMA_MISMATCH` (exit 1) |
+| `file-excel-to-jsonl` | Parser stage: the `file` raw source + the `excel` parser (named sheet, `skip_rows`) → JSONL |
 
 ## Two distinct purposes
 

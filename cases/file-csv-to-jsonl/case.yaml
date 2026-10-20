@@ -1,0 +1,26 @@
+case:
+  name: file-csv-to-jsonl
+  description: >
+    The parser stage end to end: the file raw source lists the CSVs of a
+    mounted directory (recursive, sorted, non-matching files skipped), the csv
+    parser infers one schema (int64, utf8, float64, boolean, date32, with empty
+    cells as nulls) and streams the three files into one JSONL file.
+  tags: [file, csv, parser, jsonl, smoke]
+
+services: []
+
+loadsmith:
+  volumes:
+    - host: data
+      container: /data
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 9
+  rows_written: 9
+  output:
+    file: people.jsonl
+    row_count: 9

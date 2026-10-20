@@ -27,6 +27,11 @@ oracle-to-oracle                    = "Loads 100k rows into Oracle (atomic mode)
 oracle-to-oracle-staged-merge       = "Loads 100k rows into Oracle via staged_merge (staging GTT + one MERGE upsert by id)"
 oracle-to-oracle-lob                = "Round-trips RAW/BLOB/CLOB columns Oracle→Oracle — binary/LOB type coverage"
 oracle-to-oracle-nls                = "Loads with a comma-decimal NLS_LANG — regression guard (the thin driver ignores NLS_LANG)"
+file-csv-to-jsonl                   = "Parser stage: file raw source (recursive glob) + csv parser (inferred schema) → JSONL (needs file 0.2.0 + csv 0.1.0)"
+csv-to-postgres                     = "Parser stage: windows-1252 ';' CSVs with declared columns → Postgres type_coverage_sink (atomic COPY)"
+csv-malformed-error                 = "Parser stage: a ragged CSV row fails the run (exit 1) with file + line in the error"
+csv-schema-mismatch-error           = "Parser stage: a later file whose schema differs fails with SCHEMA_MISMATCH (exit 1)"
+file-excel-to-jsonl                 = "Parser stage: file raw source + excel parser (named sheet, skip_rows) → JSONL"
 
 [bundles]
 parquet-destination = "Validates the parquet destination in single-file and chunked modes"
