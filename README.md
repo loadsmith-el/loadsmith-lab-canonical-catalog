@@ -15,10 +15,14 @@ cases/<name>/
   case.yaml              services + readiness + the `expect` block
   pipeline.yaml          the Loadsmith pipeline under test
 bundles/<name>/
-  bundle.yaml            a sequence of cases + setup/validate/cleanup hooks
-  Dockerfile             builds the image the hooks run in
-  scripts/               setup/validate/cleanup scripts
+  bundle.yaml            a sequence of cases + optional setup/validate/cleanup hooks
+  Dockerfile             builds the image the hooks run in (always required)
+  scripts/               setup/validate/cleanup scripts (optional)
 ```
+
+Hooks are optional per entry. A bundle with no hooks (e.g. `tls-spike`) still
+needs a `Dockerfile` — a one-line `FROM debian:12-slim` stub is enough, because
+the lab always builds the hook image.
 
 Add an entry under `[cases]` or `[bundles]` in `loadsmith-lab.toml` whenever you
 add content — that manifest is what `loadsmith-lab list`/`bundle list` and
@@ -63,13 +67,46 @@ add content — that manifest is what `loadsmith-lab list`/`bundle list` and
 
 ## Using this repo
 
-It's consumed by `loadsmith-lab` as an origin — register it once (local dev:
-read live, no install):
+It's consumed by `loadsmith-lab` as an origin.
+
+### Released catalog (default)
+
+`catalog` is a **default remote origin**: on first run the lab registers it
+(pointing at this repo's GitHub URL) and clones it the first time it's needed —
+no registration step. Install what you want to run, then run it:
+
+```bash
+loadsmith-lab install catalog                    # or: install catalog/postgres-to-jsonl
+loadsmith-lab run --select catalog/postgres-to-jsonl
+loadsmith-lab bundle run --select catalog/parquet-destination
+```
+
+Running an item that isn't installed fails with a hint to `loadsmith-lab install` it.
+To pick up new content, refresh the clone **and** re-install — `update` only pulls
+the cached clone and leaves installed copies untouched:
+
+```bash
+loadsmith-lab origin remote update catalog
+loadsmith-lab install catalog
+```
+
+### Local dev override
+
+To work on this repo, register your checkout as a **local** origin — read live,
+no install. This replaces the default remote `catalog` entry (the lab prints
+`note: replaced existing origin 'catalog'`):
 
 ```bash
 loadsmith-lab origin local add catalog ../loadsmith-lab-canonical-catalog
 loadsmith-lab run --select catalog/postgres-to-jsonl
 loadsmith-lab bundle run --select catalog/parquet-destination
+```
+
+To switch back to the released catalog:
+
+```bash
+loadsmith-lab origin local rm catalog
+loadsmith-lab origin remote add catalog https://github.com/loadsmith-el/loadsmith-lab-canonical-catalog.git
 ```
 
 A case's `services[].image` references an image from the
@@ -78,7 +115,7 @@ A case's `services[].image` references an image from the
 ## Writing a case or bundle
 
 See the [loadsmith-lab docs](https://github.com/loadsmith-el/loadsmith-lab/blob/main/docs/src):
-- [Writing Cases](https://github.com/loadsmith-el/loadsmith-lab/blob/main/docs/src/writing-cases)
+- [Writing Cases](https://github.com/loadsmith-el/loadsmith-lab/blob/main/docs/src/writing-cases/case-yaml.md)
 - [Writing Bundles](https://github.com/loadsmith-el/loadsmith-lab/blob/main/docs/src/writing-bundles/bundle-yaml.md)
 - [`case.yaml` schema](https://github.com/loadsmith-el/loadsmith-lab/blob/main/docs/src/reference/case-yaml-schema.md)
 - [`bundle.yaml` schema](https://github.com/loadsmith-el/loadsmith-lab/blob/main/docs/src/reference/bundle-yaml-schema.md)

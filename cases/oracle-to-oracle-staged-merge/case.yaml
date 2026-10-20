@@ -1,10 +1,10 @@
 case:
   name: oracle-to-oracle-staged-merge
   description: >
-    Loads 100k rows into Oracle via staged_merge — an array `MERGE INTO … USING
-    (SELECT … FROM dual) … WHEN MATCHED THEN UPDATE … WHEN NOT MATCHED THEN
-    INSERT` upsert keyed by id. Exercises the idempotent upsert path against a
-    real Oracle; asserts every row committed.
+    Loads 100k rows into Oracle via staged_merge — array INSERT into a
+    session-private global temporary staging table, then one set-based
+    `MERGE INTO events_sink USING` the staging table keyed by id. Exercises the
+    idempotent upsert path against a real Oracle; asserts every row committed.
   tags: [oracle, destination, staged-merge, smoke]
 
 services:

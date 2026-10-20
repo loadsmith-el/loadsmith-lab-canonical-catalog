@@ -31,6 +31,6 @@ loadsmith                                             the tool under test
   `loadsmith-lab.toml` manifest.
 - [Cases](./cases.md) — what each case validates.
 - [Bundles](./bundles.md) — the sequenced, hook-wrapped scenarios.
-- [Using the Catalog](./using.md) — registering it as an origin and running.
+- [Using the Catalog](./using.md) — the default origin, local overrides and running.
 - [Writing a Case or Bundle](./writing.md) — the rules and where the schemas
   live.

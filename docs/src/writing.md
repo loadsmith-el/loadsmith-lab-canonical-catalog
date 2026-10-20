@@ -21,10 +21,16 @@ What follows are the rules specific to **this** content repo.
   `postgres-to-null-15M`). The 100k smoke case (`postgres-to-jsonl`) is the one
   that validates real content/type round-trips — don't conflate the two
   purposes.
-- **Postgres-protocol services need a query-level readiness probe**, not just
-  `tcp:`. The service accepts connections while still loading the 100k-row seed,
-  so a TCP-only check races. Mirror the `postgres:` probe block in
-  `cases/postgres-to-jsonl/case.yaml`.
+- **Database services need a query-level readiness probe** — a `postgres:` /
+  `mysql:` / `oracle:` block alongside the required `tcp:`, not `tcp:` alone.
+  The service accepts connections while still loading the seed, so a TCP-only
+  check races. Probe an object the fixture creates last: the seeded table (or
+  its last row) for most cases, e.g. the `postgres:` block in
+  `cases/postgres-to-jsonl/case.yaml`; for Oracle destination cases, the sink PK
+  constraint (e.g. `PK_SINK` in `cases/oracle-to-oracle/case.yaml`), because the
+  seed commit becomes visible before the sink table exists. Exception:
+  `oracle-to-jsonl-tls` gates on `tcp: 2484` alone, because its stunnel start
+  hook runs only after `init.sql` has loaded the seed.
 - **`services[].image` is an `<origin>/<name>` reference** (e.g.
   `images/lab-postgres-15`), resolved against
   [`loadsmith-lab-canonical-images`](https://loadsmith-el.github.io/loadsmith-lab-canonical-images/).

@@ -1,6 +1,6 @@
 # Bundles
 
-A **bundle** is a sequence of existing cases wrapped with
+A **bundle** is a sequence of existing cases optionally wrapped with
 setup / validate / cleanup hooks. The hooks run inside an image the bundle builds
 from its own `Dockerfile`, so no host Python or other dependencies are required.
 
@@ -19,9 +19,13 @@ case a self-contained unit and the bundle a higher-level orchestration on top.
 ```text
 bundles/<name>/
   bundle.yaml      the ordered list of cases + the hook references
-  Dockerfile       builds the image the hook scripts run in
-  scripts/         setup / validate / cleanup scripts
+  Dockerfile       builds the image the hook scripts run in (always required)
+  scripts/         setup / validate / cleanup scripts (optional)
 ```
+
+Hooks are optional per entry. A bundle with no hooks (e.g. `tls-spike`) still
+needs a `Dockerfile` — a one-line `FROM debian:12-slim` stub is enough, because
+the lab always builds the hook image.
 
 See [Writing a Case or Bundle](./writing.md) and the lab's
 [Writing Bundles](https://loadsmith-el.github.io/loadsmith-lab/writing-bundles/bundle-yaml.html)

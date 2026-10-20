@@ -6,10 +6,14 @@ cases/<name>/
   case.yaml              services + readiness + the `expect` block
   pipeline.yaml          the Loadsmith pipeline under test
 bundles/<name>/
-  bundle.yaml            a sequence of cases + setup/validate/cleanup hooks
-  Dockerfile             builds the image the hooks run in
-  scripts/               setup/validate/cleanup scripts
+  bundle.yaml            a sequence of cases + optional setup/validate/cleanup hooks
+  Dockerfile             builds the image the hooks run in (always required)
+  scripts/               setup/validate/cleanup scripts (optional)
 ```
+
+Hooks are optional per entry. A bundle with no hooks (e.g. `tls-spike`) still
+needs a `Dockerfile` — a one-line `FROM debian:12-slim` stub is enough, because
+the lab always builds the hook image.
 
 ## The manifest is authoritative
 
