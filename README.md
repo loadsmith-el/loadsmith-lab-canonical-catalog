@@ -46,7 +46,7 @@ add content — that manifest is what `loadsmith-lab list`/`bundle list` and
 | `mysql-to-jsonl-native` | Reads 100k rows from MySQL via the legacy `mysql_native_password` auth plugin — auth-mode coverage |
 | `mysql-to-jsonl-tls-require` | Reads 100k rows from MySQL over TLS (`mode: require`) — rustls handshake validation |
 | `mysql-to-mysql` | Loads 100k rows into MySQL (`append` mode) — destination smoke test |
-| `mysql-to-mysql-staged-merge` | Loads 100k rows into MySQL via `merge` (ON DUPLICATE KEY upsert by `id`) |
+| `mysql-to-mysql-staged-merge` | Loads 100k rows into MySQL via `merge` (keyed merge on `id`: UPDATE … JOIN, then INSERT of new keys) |
 | `oracle-to-jsonl` | Reads 100k wide rows (34 cols) from Oracle and writes them to JSONL (content/type smoke test) |
 | `oracle-to-jsonl-tls` | Reads 100k rows from Oracle over TCPS — `tls.mode: verify-full`, chain + hostname verified against the lab CA (`root_cert`) |
 | `oracle-to-jsonl-incremental` | Incremental watermark read (cursor `event_sequence > 50000`) — reads the upper 50k |
