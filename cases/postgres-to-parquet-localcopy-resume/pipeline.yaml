@@ -20,6 +20,6 @@ destination:
     max_file_size: "512KiB"
 
 sink:
-  type: local-copy
+  type: local-copy-chaos
   config:
     dest: /output

@@ -1,7 +1,7 @@
 case:
   name: postgres-to-parquet-localcopy-resume
-  description: Crashes the sink mid-delivery (LOADSMITH_SINK_CRASH_AFTER) and asserts the core respawns it and delivers every chunk
-  tags: [postgres, parquet, sink, resilience]
+  description: Crashes the sink mid-delivery (local-copy-chaos, LOADSMITH_SINK_CRASH_AFTER) and asserts the core respawns it and delivers every chunk. Needs --plugin <canonical-plugins workspace> (the chaos sink is never released)
+  tags: [postgres, parquet, sink, resilience, requires-local-plugin]
 
 services:
   - image: images/lab-postgres-15
