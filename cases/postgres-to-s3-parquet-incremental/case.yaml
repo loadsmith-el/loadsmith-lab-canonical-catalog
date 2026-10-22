@@ -1,0 +1,48 @@
+case:
+  name: postgres-to-s3-parquet-incremental
+  description: >
+    The client flow, incremental: run 1 loads all 100k rows (watermark on
+    event_sequence) to chunked Parquet delivered to an S3 simulator; 10 new rows
+    are inserted; run 2 loads only those 10 and delivers them under its own run
+    prefix, next to run 1's objects. The bundle client-flow checks 100,010
+    unique ids across exactly two run prefixes and typed (non-text) numerics.
+  tags: [postgres, parquet, s3, sink, incremental, client-flow]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM type_coverage WHERE id = 4"
+  - image: images/lab-s3
+    alias: s3
+    output_mount: /data
+    readiness:
+      tcp: 9000
+      timeout_seconds: 60
+
+pipeline:
+  file: pipeline.yaml
+
+runs:
+  - expect:
+      status: success
+      rows_read: 100000
+      rows_written: 100000
+    after:
+    - service: pg
+      sql: >
+        CREATE TEMP TABLE new_events AS
+          SELECT * FROM spacecraft_telemetry_events WHERE event_sequence <= 10;
+        UPDATE new_events SET id = 'n' || substr(id, 2), event_sequence = event_sequence + 100000;
+        INSERT INTO spacecraft_telemetry_events SELECT * FROM new_events;
+
+expect:
+  status: success
+  rows_read: 10
+  rows_written: 10

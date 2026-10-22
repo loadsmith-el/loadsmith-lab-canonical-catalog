@@ -1,0 +1,15 @@
+bundle:
+  name: client-flow
+  description: >
+    The client flow end to end — Oracle/Postgres → Parquet → S3 (full and
+    incremental): opens every object the s3 sink delivered to the simulator and
+    checks the key layout, one prefix per run, row and unique-id counts, and
+    that numeric columns are typed (int/decimal), never text.
+
+cases:
+  - case: catalog/postgres-to-s3-parquet
+    validate: /scripts/check_s3.py
+  - case: catalog/postgres-to-s3-parquet-incremental
+    validate: /scripts/check_s3.py
+  - case: catalog/oracle-to-s3-parquet-incremental
+    validate: /scripts/check_s3.py

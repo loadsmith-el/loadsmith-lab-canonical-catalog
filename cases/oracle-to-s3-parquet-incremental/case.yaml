@@ -1,0 +1,47 @@
+case:
+  name: oracle-to-s3-parquet-incremental
+  description: >
+    The client flow, incremental: run 1 loads all 100k rows (watermark on
+    event_sequence) to chunked Parquet delivered to an S3 simulator; 10 new rows
+    are inserted; run 2 loads only those 10 and delivers them under its own run
+    prefix, next to run 1's objects. The bundle client-flow checks 100,010
+    unique ids across exactly two run prefixes and typed (non-text) numerics.
+  tags: [oracle, parquet, s3, sink, incremental, client-flow]
+
+services:
+  - image: images/lab-oracle
+    alias: oracle
+    readiness:
+      tcp: 1521
+      timeout_seconds: 600
+      oracle:
+        service_name: FREEPDB1
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM user_constraints WHERE constraint_name = 'PK_SINK'"
+  - image: images/lab-s3
+    alias: s3
+    output_mount: /data
+    readiness:
+      tcp: 9000
+      timeout_seconds: 60
+
+pipeline:
+  file: pipeline.yaml
+
+runs:
+  - expect:
+      status: success
+      rows_read: 100000
+      rows_written: 100000
+    after:
+    - service: oracle
+      sql: >
+        INSERT INTO spacecraft_telemetry_events (id, spacecraft_id, mission_id, event_sequence, sensor_name, sensor_type, reading_int, reading_bigint, reading_decimal, reading_double, reading_bool, reading_text, status_code, severity, is_anomaly, event_date, event_time, event_timestamp, received_at, latitude, longitude, altitude_km, velocity_kmh, temperature_c, radiation_level, battery_percent, payload_mass_kg, operator_notes, raw_payload_json, tags, checksum, created_at, updated_at, deleted_at)
+        SELECT 'n' || SUBSTR(id, 2), spacecraft_id, mission_id, event_sequence + 100000, sensor_name, sensor_type, reading_int, reading_bigint, reading_decimal, reading_double, reading_bool, reading_text, status_code, severity, is_anomaly, event_date, event_time, event_timestamp, received_at, latitude, longitude, altitude_km, velocity_kmh, temperature_c, radiation_level, battery_percent, payload_mass_kg, operator_notes, raw_payload_json, tags, checksum, created_at, updated_at, deleted_at
+        FROM spacecraft_telemetry_events WHERE event_sequence <= 10
+
+expect:
+  status: success
+  rows_read: 10
+  rows_written: 10

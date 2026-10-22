@@ -1,0 +1,34 @@
+case:
+  name: postgres-to-s3-parquet
+  description: >
+    The client flow, full load: 100k rows from Postgres to one Parquet file,
+    delivered to an S3 simulator by the s3 sink as a multipart upload (5 MiB
+    parts) under raw/events/<run date>/<run id>/. The bundle client-flow opens
+    the delivered object and checks rows, ids and typed (non-text) numerics.
+  tags: [postgres, parquet, s3, sink, client-flow]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM type_coverage WHERE id = 4"
+  - image: images/lab-s3
+    alias: s3
+    output_mount: /data
+    readiness:
+      tcp: 9000
+      timeout_seconds: 60
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 100000
+  rows_written: 100000
