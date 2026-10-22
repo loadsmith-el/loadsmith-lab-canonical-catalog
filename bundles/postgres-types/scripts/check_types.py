@@ -7,10 +7,13 @@ Opens types.snappy.parquet and asserts, against the type_coverage fixture
   - the decoded values, row by row.
 Dates/timestamps are compared as integers (days / ms since the Unix epoch) because
 Python's datetime can't represent the BC values. Timestamps are millisecond
-precision, so the fixture's microseconds are truncated.
+precision, so the fixture's microseconds are truncated. numeric(10,2) is an exact
+decimal128(10, 2); the unconstrained c_numeric holds values no 38-digit decimal
+fits (a 39-digit value, NaN in the array), so the case's query reads it ::text.
 """
 import math
 import sys
+from decimal import Decimal
 from pathlib import Path
 
 import pyarrow as pa
@@ -36,7 +39,7 @@ TSZ = pa.timestamp("ms", tz="UTC")
 SCHEMA = {
     "id": pa.int32(), "c_int2": pa.int32(), "c_int4": pa.int32(), "c_int8": pa.int64(),
     "c_float4": pa.float32(), "c_float8": pa.float64(),
-    "c_numeric": pa.string(), "c_numeric_10_2": pa.string(), "c_bool": pa.bool_(),
+    "c_numeric": pa.string(), "c_numeric_10_2": pa.decimal128(10, 2), "c_bool": pa.bool_(),
     "c_text": pa.string(), "c_varchar": pa.string(), "c_char": pa.string(),
     "c_date": pa.date32(), "c_timestamp": TS, "c_timestamptz": TSZ,
     "c_time": pa.string(), "c_timetz": pa.string(), "c_interval": pa.string(),
@@ -55,7 +58,7 @@ EXPECTED = {
     1: {
         "c_int2": 12, "c_int4": 123456, "c_int8": 9007199254740993,
         "c_float4": 1.5, "c_float8": 2.25,
-        "c_numeric": "12345.6789", "c_numeric_10_2": "99.95", "c_bool": True,
+        "c_numeric": "12345.6789", "c_numeric_10_2": Decimal("99.95"), "c_bool": True,
         "c_text": "hello", "c_varchar": "varchar", "c_char": "abc",
         "c_date": days(2024, 1, 15),
         "c_timestamp": ms(2024, 1, 15, 12, 30, 45, 123),
@@ -73,7 +76,7 @@ EXPECTED = {
     2: {
         "c_int2": -12, "c_int4": -123456, "c_int8": -9007199254740993,
         "c_float4": -1.5, "c_float8": -2.25,
-        "c_numeric": "-0.000001", "c_numeric_10_2": "-99.95", "c_bool": False,
+        "c_numeric": "-0.000001", "c_numeric_10_2": Decimal("-99.95"), "c_bool": False,
         "c_text": "", "c_varchar": "ção ✓", "c_char": "x  ",
         "c_date": 0,
         "c_timestamp": -1,  # 1969-12-31 23:59:59.999
@@ -90,7 +93,7 @@ EXPECTED = {
         "c_int2": 32767, "c_int4": 2147483647, "c_int8": 9223372036854775807,
         "c_float4": NAN, "c_float8": INF,
         "c_numeric": "123456789012345678901234567890.123456789",
-        "c_numeric_10_2": "-12345678.99", "c_bool": None,
+        "c_numeric_10_2": Decimal("-12345678.99"), "c_bool": None,
         "c_text": "tab\tand\nnewline", "c_varchar": None, "c_char": None,
         "c_date": days(-43, 3, 15),  # 0044-03-15 BC
         "c_timestamp": ms(-43, 3, 15, 12),

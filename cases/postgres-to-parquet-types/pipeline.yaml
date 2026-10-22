@@ -9,7 +9,17 @@ source:
     dbname: lab
     user: lab
     password: lab
-    query: "SELECT * FROM type_coverage ORDER BY id"
+    # c_numeric is an unconstrained numeric holding values no 38-digit decimal
+    # fits (39 digits; NaN in the array), so it is read as text explicitly;
+    # numeric(10,2) crosses as an exact decimal128(10, 2).
+    query: >
+      SELECT id, c_int2, c_int4, c_int8, c_float4, c_float8,
+             c_numeric::text AS c_numeric, c_numeric_10_2, c_bool, c_text, c_varchar,
+             c_char, c_date, c_timestamp, c_timestamptz, c_time, c_timetz, c_interval,
+             c_uuid, c_json, c_jsonb, c_inet, c_bytea, c_int4_arr, c_text_arr,
+             c_numeric_arr::text[] AS c_numeric_arr, c_date_arr, c_timestamptz_arr,
+             c_bytea_arr
+      FROM type_coverage ORDER BY id
     # timestamptz is rendered in the session TimeZone — a non-UTC, non-whole-hour
     # zone proves the connector parses the offset and normalizes to UTC.
     session:

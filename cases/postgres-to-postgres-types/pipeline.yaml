@@ -9,11 +9,13 @@ source:
     dbname: lab
     user: lab
     password: lab
+    # c_numeric (unconstrained) holds a 39-digit value and NaN, which no
+    # decimal128 fits: read as text, and COPY casts it back.
     query: >
-      SELECT id, c_int2, c_int4, c_int8, c_float4, c_float8, c_numeric,
-             c_numeric_10_2, c_bool, c_text, c_varchar, c_char, c_date, c_timestamp,
-             c_timestamptz, c_time, c_timetz, c_interval, c_uuid, c_json, c_jsonb,
-             c_inet, c_bytea
+      SELECT id, c_int2, c_int4, c_int8, c_float4, c_float8,
+             c_numeric::text AS c_numeric, c_numeric_10_2, c_bool, c_text, c_varchar,
+             c_char, c_date, c_timestamp, c_timestamptz, c_time, c_timetz, c_interval,
+             c_uuid, c_json, c_jsonb, c_inet, c_bytea
       FROM type_coverage ORDER BY id
     session:
       TimeZone: Asia/Kolkata
