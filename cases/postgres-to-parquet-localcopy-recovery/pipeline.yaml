@@ -1,0 +1,34 @@
+pipeline:
+  name: postgres-to-parquet-localcopy-recovery
+  recovery:
+    max_attempts: 2
+    backoff_seconds: 1
+
+source:
+  type: postgres
+  config:
+    host: pg
+    port: 5432
+    dbname: lab
+    user: lab
+    password: lab
+    query: "SELECT * FROM spacecraft_telemetry_events"
+    batch_size: 2000
+    incremental:
+      cursor_column: event_sequence
+
+state:
+  backend: local
+  path: /output/state.json
+
+destination:
+  type: parquet
+  config:
+    prefix: events
+    compression: snappy
+    max_file_size: "512KiB"
+
+sink:
+  type: local-copy-chaos
+  config:
+    dest: /output/delivered

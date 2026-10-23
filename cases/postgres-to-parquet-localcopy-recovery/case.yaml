@@ -1,0 +1,42 @@
+case:
+  name: postgres-to-parquet-localcopy-recovery
+  description: >
+    pipeline.recovery on an incremental run with a sink: the target goes down
+    after 2 delivered Parquet chunks and stays down for 6 deliveries
+    (local-copy-chaos LOADSMITH_SINK_FAIL_AFTER/FAIL_COUNT), so attempt 1
+    fails once the core's sink supervisor gives up. Attempt 2 starts in the
+    same process, under the same run id, from the watermark at the delivered
+    prefix (3999): it reads the 96,001 rows from 4000 on and numbers its files
+    after the ones attempt 1 staged, so the 2 delivered files keep their names
+    and the target holds every row. Needs --plugin <canonical-plugins
+    workspace> (the chaos sink is never released).
+  tags: [postgres, parquet, sink, incremental, resilience, recovery, requires-local-plugin]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events LIMIT 1"
+
+loadsmith:
+  env:
+    - LOADSMITH_SINK_FAIL_AFTER=2
+    - LOADSMITH_SINK_FAIL_COUNT=6
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 96001
+  rows_written: 96001
+  logs:
+    contains:
+      - "attempt 1 of 2 failed"
+      - "Attempt:      2"
