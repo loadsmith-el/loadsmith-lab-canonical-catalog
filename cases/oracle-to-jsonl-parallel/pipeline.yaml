@@ -1,0 +1,20 @@
+pipeline:
+  name: oracle-to-jsonl-parallel
+
+source:
+  type: oracle
+  config:
+    host: oracle
+    port: 1521
+    service_name: FREEPDB1
+    user: lab
+    password: lab
+    query: "SELECT e.* FROM spacecraft_telemetry_events e WHERE e.event_sequence <= 60000"
+    batch_size: 2000
+    parallel:
+      workers: 4
+
+destination:
+  type: jsonl
+  config:
+    path: /output/events.jsonl

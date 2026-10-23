@@ -1,0 +1,28 @@
+case:
+  name: oracle-parallel-unsplittable
+  description: >
+    `parallel` on a query it cannot split (a GROUP BY) fails at startup with
+    the reason, exit 3, before any data moves.
+  tags: [oracle, parallel, config-error]
+
+services:
+  - image: images/lab-oracle
+    alias: oracle
+    readiness:
+      tcp: 1521
+      timeout_seconds: 600   # Oracle is slow to open the PDB + load the seed
+      oracle:
+        service_name: FREEPDB1
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events WHERE ROWNUM = 1"
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: error
+  exit_code: 3
+  logs:
+    contains:
+      - "`parallel` splits a query of the form"

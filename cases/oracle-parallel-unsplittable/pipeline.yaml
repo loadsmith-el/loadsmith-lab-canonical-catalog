@@ -1,0 +1,19 @@
+pipeline:
+  name: oracle-parallel-unsplittable
+
+source:
+  type: oracle
+  config:
+    host: oracle
+    port: 1521
+    service_name: FREEPDB1
+    user: lab
+    password: lab
+    query: "SELECT mission_id, COUNT(*) AS n FROM spacecraft_telemetry_events GROUP BY mission_id"
+    parallel:
+      workers: 4
+
+destination:
+  type: jsonl
+  config:
+    path: /output/events.jsonl
