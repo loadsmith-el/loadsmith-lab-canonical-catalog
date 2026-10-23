@@ -1,0 +1,42 @@
+case:
+  name: postgres-to-parquet-localcopy-outage-ties
+  description: >
+    The outage case with ties on the cursor: `bucket` = event_sequence / 1000,
+    1000 rows per value, read in batches of 1500, so batch boundaries split the
+    groups. Run 1 delivers 2 chunks and the sink goes down; the watermark it
+    persists must be a bucket that is complete (never the bucket of a batch's
+    last row, which continues in the next batch), so run 2 starts at a group's
+    first row and no row is skipped: 2 chunks = rows 1-6000, bucket 6 holds
+    only row 6000 so far, the watermark is bucket 5, and run 2 reads the
+    94,001 rows from 6000 on (bucket 6 would skip 6001-6999). Needs --plugin <canonical-plugins
+    workspace> (the chaos sink is never released).
+  tags: [postgres, parquet, sink, incremental, resilience, ties, requires-local-plugin]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events LIMIT 1"
+
+pipeline:
+  file: pipeline.yaml
+
+runs:
+  - env:
+      - LOADSMITH_SINK_FAIL_AFTER=2
+    expect:
+      status: error
+      logs:
+        contains:
+          - "advances only through the delivered files"
+
+expect:
+  status: success
+  rows_read: 94001
+  rows_written: 94001

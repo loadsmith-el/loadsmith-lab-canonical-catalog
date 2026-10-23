@@ -1,0 +1,32 @@
+pipeline:
+  name: postgres-to-parquet-localcopy-outage-ties
+
+source:
+  type: postgres
+  config:
+    host: pg
+    port: 5432
+    dbname: lab
+    user: lab
+    password: lab
+    # 1000 rows per cursor value; batches of 1500 split the groups.
+    query: "SELECT event_sequence / 1000 AS bucket, t.* FROM spacecraft_telemetry_events t"
+    batch_size: 1500
+    incremental:
+      cursor_column: bucket
+
+state:
+  backend: local
+  path: /output/state.json
+
+destination:
+  type: parquet
+  config:
+    prefix: events
+    compression: snappy
+    max_file_size: "512KiB"
+
+sink:
+  type: local-copy-chaos
+  config:
+    dest: /output/delivered

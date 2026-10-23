@@ -2,12 +2,14 @@ case:
   name: postgres-to-parquet-localcopy-outage
   description: >
     The target goes down mid-delivery on an incremental run: run 1 delivers 2
-    Parquet chunks, then every delivery fails (local-copy-chaos,
-    LOADSMITH_SINK_FAIL_AFTER) and the run fails. Its watermark must not have
-    advanced past what was delivered, so run 2 (target back) rereads all 100k
-    rows. Before engine 1.0.1 the watermark advanced at the destination's
-    commit and run 2 read nothing. Needs --plugin <canonical-plugins workspace>
-    (the chaos sink is never released).
+    Parquet chunks (batches 1-2, rows 1-4000), then every delivery fails
+    (local-copy-chaos, LOADSMITH_SINK_FAIL_AFTER) and the run fails. Its
+    watermark advances exactly through the delivered files, held back one row
+    by the tie-safe rule (3999, since 4000 could continue in the next batch),
+    so run 2 (target back) reads the 96,001 rows from 4000 on. Before engine
+    1.0.1 the watermark advanced at the destination's commit and run 2 read
+    nothing; 1.0.1 kept it where run 1 started and run 2 read all 100k. Needs
+    --plugin <canonical-plugins workspace> (the chaos sink is never released).
   tags: [postgres, parquet, sink, incremental, resilience, requires-local-plugin]
 
 services:
@@ -30,8 +32,11 @@ runs:
       - LOADSMITH_SINK_FAIL_AFTER=2
     expect:
       status: error
+      logs:
+        contains:
+          - "advances only through the delivered files"
 
 expect:
   status: success
-  rows_read: 100000
-  rows_written: 100000
+  rows_read: 96001
+  rows_written: 96001
