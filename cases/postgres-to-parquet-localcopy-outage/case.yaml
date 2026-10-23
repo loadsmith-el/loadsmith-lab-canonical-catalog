@@ -1,0 +1,37 @@
+case:
+  name: postgres-to-parquet-localcopy-outage
+  description: >
+    The target goes down mid-delivery on an incremental run: run 1 delivers 2
+    Parquet chunks, then every delivery fails (local-copy-chaos,
+    LOADSMITH_SINK_FAIL_AFTER) and the run fails. Its watermark must not have
+    advanced past what was delivered, so run 2 (target back) rereads all 100k
+    rows. Before engine 1.0.1 the watermark advanced at the destination's
+    commit and run 2 read nothing. Needs --plugin <canonical-plugins workspace>
+    (the chaos sink is never released).
+  tags: [postgres, parquet, sink, incremental, resilience, requires-local-plugin]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events LIMIT 1"
+
+pipeline:
+  file: pipeline.yaml
+
+runs:
+  - env:
+      - LOADSMITH_SINK_FAIL_AFTER=2
+    expect:
+      status: error
+
+expect:
+  status: success
+  rows_read: 100000
+  rows_written: 100000
