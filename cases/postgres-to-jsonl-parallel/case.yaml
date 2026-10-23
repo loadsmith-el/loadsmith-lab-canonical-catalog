@@ -1,0 +1,32 @@
+case:
+  name: postgres-to-jsonl-parallel
+  description: >
+    A partitioned full load (postgres `parallel: {workers: 4}`): four
+    connections read page ranges of the telemetry table in one exported
+    snapshot, through an alias and a filter (event_sequence <= 60000). Every
+    row exactly once: the output holds the 60,000 filtered rows, no duplicate
+    and none missing.
+  tags: [postgres, jsonl, parallel]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events LIMIT 1"
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 60000
+  rows_written: 60000
+  output:
+    file: events.jsonl
+    row_count: 60000

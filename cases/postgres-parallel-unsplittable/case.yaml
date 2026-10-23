@@ -1,0 +1,28 @@
+case:
+  name: postgres-parallel-unsplittable
+  description: >
+    `parallel` on a query it cannot split (a GROUP BY) fails at startup with
+    the reason, exit 3, before any data moves.
+  tags: [postgres, parallel, config-error]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events LIMIT 1"
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: error
+  exit_code: 3
+  logs:
+    contains:
+      - "`parallel` splits a query of the form"

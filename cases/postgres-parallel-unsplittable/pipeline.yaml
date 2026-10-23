@@ -1,0 +1,19 @@
+pipeline:
+  name: postgres-parallel-unsplittable
+
+source:
+  type: postgres
+  config:
+    host: pg
+    port: 5432
+    dbname: lab
+    user: lab
+    password: lab
+    query: "SELECT mission_id, count(*) AS n FROM spacecraft_telemetry_events GROUP BY mission_id"
+    parallel:
+      workers: 4
+
+destination:
+  type: jsonl
+  config:
+    path: /output/events.jsonl
