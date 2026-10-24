@@ -1,0 +1,19 @@
+pipeline:
+  name: postgres-to-jsonl-cursor
+
+source:
+  type: postgres
+  config:
+    host: pg
+    port: 5432
+    dbname: lab
+    user: lab
+    password: lab
+    query: "SELECT * FROM spacecraft_telemetry_events ORDER BY event_sequence"
+    batch_size: 2000
+    fetch: cursor
+
+destination:
+  type: jsonl
+  config:
+    path: /output/events.jsonl

@@ -1,0 +1,43 @@
+case:
+  name: postgres-to-parquet-localcopy-runs
+  description: >
+    Two incremental runs delivered by local-copy into the same directory: run
+    1 loads the 100,000 rows, 10 rows are inserted, run 2 loads those 10. With
+    the default `key` each run's files land under their own
+    <date>/<run id>/ prefix (before local-copy 0.3.0 the names were flat and
+    run 2's first file replaced run 1's). The client-flow bundle checks two
+    run prefixes and 100,010 unique ids.
+  tags: [postgres, parquet, sink, incremental]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events LIMIT 1"
+
+pipeline:
+  file: pipeline.yaml
+
+runs:
+  - expect:
+      status: success
+      rows_read: 100000
+      rows_written: 100000
+    after:
+    - service: pg
+      sql: >
+        CREATE TEMP TABLE new_events AS
+          SELECT * FROM spacecraft_telemetry_events WHERE event_sequence <= 10;
+        UPDATE new_events SET id = 'n' || substr(id, 2), event_sequence = event_sequence + 100000;
+        INSERT INTO spacecraft_telemetry_events SELECT * FROM new_events;
+
+expect:
+  status: success
+  rows_read: 10
+  rows_written: 10

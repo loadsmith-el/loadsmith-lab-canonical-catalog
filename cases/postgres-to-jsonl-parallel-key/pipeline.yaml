@@ -1,0 +1,21 @@
+pipeline:
+  name: postgres-to-jsonl-parallel-key
+
+source:
+  type: postgres
+  config:
+    host: pg
+    port: 5432
+    dbname: lab
+    user: lab
+    password: lab
+    query: "SELECT e.* FROM spacecraft_telemetry_events AS e WHERE e.event_sequence <= 60000"
+    batch_size: 2000
+    parallel:
+      workers: 4
+      split_by: event_sequence
+
+destination:
+  type: jsonl
+  config:
+    path: /output/events.jsonl

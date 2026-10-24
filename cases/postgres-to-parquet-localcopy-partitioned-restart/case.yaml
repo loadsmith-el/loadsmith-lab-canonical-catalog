@@ -1,0 +1,42 @@
+case:
+  name: postgres-to-parquet-localcopy-partitioned-restart
+  description: >
+    A partitioned full load by page ranges (the default `split_by: ctid`)
+    that fails mid-delivery cannot be continued: its snapshot ended with its
+    transaction, and a new one could move rows between pages. Run 2 starts
+    over under run 1's id, numbering its files from the first, so they
+    replace run 1's (the one it left unacknowledged included). The
+    client-flow bundle checks one run prefix and exactly 100,000 rows, no
+    duplicate. Needs --plugin <canonical-plugins workspace> (the chaos sink
+    is never released).
+  tags: [postgres, parquet, sink, parallel, resilience, requires-local-plugin]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events LIMIT 1"
+
+pipeline:
+  file: pipeline.yaml
+
+runs:
+  - env:
+      - LOADSMITH_SINK_FAIL_AFTER=5
+      - LOADSMITH_SINK_FAIL_COPIES=1
+    expect:
+      status: error
+
+expect:
+  status: success
+  rows_read: 100000
+  rows_written: 100000
+  logs:
+    contains:
+      - "the partitioned load starts over"

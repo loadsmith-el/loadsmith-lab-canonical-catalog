@@ -1,0 +1,43 @@
+case:
+  name: postgres-to-parquet-localcopy-partitioned-resume
+  description: >
+    A partitioned full load that fails mid-delivery is continued by the next
+    run: split by a key (`split_by: event_sequence`) with `resume_snapshot:
+    new`, the source reports the partitions it finished; run 1 delivers 20
+    files (some partitions finished), then the target fails (after copying
+    a 21st). Run 2 resumes run 1:
+    the same prefix, file numbers after the delivered ones, and only the
+    partitions not finished, read at a new snapshot. The client-flow bundle
+    checks one run prefix and every id; a partition that was in progress is
+    read again, so some ids may be twice. Needs --plugin <canonical-plugins
+    workspace> (the chaos sink is never released).
+  tags: [postgres, parquet, sink, parallel, resilience, requires-local-plugin]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events LIMIT 1"
+
+pipeline:
+  file: pipeline.yaml
+
+runs:
+  - env:
+      - LOADSMITH_SINK_FAIL_AFTER=20
+      - LOADSMITH_SINK_FAIL_COPIES=1
+    expect:
+      status: error
+
+expect:
+  status: success
+  logs:
+    contains:
+      - "Resumed:      run"
+      - "partitions not yet done, at a new snapshot"

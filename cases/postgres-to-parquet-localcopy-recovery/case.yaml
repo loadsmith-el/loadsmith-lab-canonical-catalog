@@ -7,8 +7,9 @@ case:
     fails once the core's sink supervisor gives up. Attempt 2 starts in the
     same process, under the same run id, from the watermark at the delivered
     prefix (3999): it reads the 96,001 rows from 4000 on and numbers its files
-    after the ones attempt 1 staged, so the 2 delivered files keep their names
-    and the target holds every row. Needs --plugin <canonical-plugins
+    after the ones attempt 1 delivered (from the resume record attempt 1 left
+    in the state), so the 2 delivered files keep their names and the target
+    holds every row. Needs --plugin <canonical-plugins
     workspace> (the chaos sink is never released).
   tags: [postgres, parquet, sink, incremental, resilience, recovery, requires-local-plugin]
 

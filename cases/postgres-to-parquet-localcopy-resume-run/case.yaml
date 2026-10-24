@@ -1,0 +1,44 @@
+case:
+  name: postgres-to-parquet-localcopy-resume-run
+  description: >
+    A failed incremental run is continued by the next one, in a new process:
+    run 1 delivers 2 Parquet files, then the target fails every delivery, but
+    only after copying the file (local-copy-chaos LOADSMITH_SINK_FAIL_COPIES):
+    file 3 is at the target, unacknowledged — what a SIGKILL during an upload
+    leaves. Run 2 resumes run 1 (its resume record in the state): the same run
+    id, so the same prefix, and file numbers from 3, so it replaces the
+    unacknowledged file instead of adding a second copy of its rows. The
+    client-flow bundle checks one run prefix and 100,001 rows: every id, and
+    one read twice (the tie-safe watermark's boundary row). Needs --plugin
+    <canonical-plugins workspace> (the chaos sink is never released).
+  tags: [postgres, parquet, sink, incremental, resilience, requires-local-plugin]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events LIMIT 1"
+
+pipeline:
+  file: pipeline.yaml
+
+runs:
+  - env:
+      - LOADSMITH_SINK_FAIL_AFTER=2
+      - LOADSMITH_SINK_FAIL_COPIES=1
+    expect:
+      status: error
+
+expect:
+  status: success
+  rows_read: 96001
+  rows_written: 96001
+  logs:
+    contains:
+      - "Resumed:      run"

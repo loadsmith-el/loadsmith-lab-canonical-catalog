@@ -4,7 +4,9 @@ bundle:
     The client flow end to end — Oracle/Postgres → Parquet → S3 (full and
     incremental): opens every object the s3 sink delivered to the simulator and
     checks the key layout, one prefix per run, row and unique-id counts, and
-    that numeric columns are typed (int/decimal), never text.
+    that numeric columns are typed (int/decimal), never text; and the same
+    for what the local-copy sink delivered when a run fails and the next one
+    continues it (one prefix, every id, the re-reads expected).
 
 cases:
   - case: catalog/postgres-to-s3-parquet
@@ -13,3 +15,13 @@ cases:
     validate: /scripts/check_s3.py
   - case: catalog/oracle-to-s3-parquet-incremental
     validate: /scripts/check_s3.py
+  - case: catalog/postgres-to-parquet-localcopy-runs
+    validate: /scripts/check_local.py
+  - case: catalog/postgres-to-parquet-localcopy-resume-run
+    validate: /scripts/check_local.py
+  - case: catalog/postgres-to-parquet-localcopy-partitioned-resume
+    validate: /scripts/check_local.py
+  - case: catalog/postgres-to-parquet-localcopy-partitioned-restart
+    validate: /scripts/check_local.py
+  - case: catalog/oracle-to-parquet-localcopy-partitioned-resume
+    validate: /scripts/check_local.py

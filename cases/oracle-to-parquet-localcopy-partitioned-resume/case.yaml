@@ -1,0 +1,40 @@
+case:
+  name: oracle-to-parquet-localcopy-partitioned-resume
+  description: >
+    An Oracle partitioned full load (ROWID ranges at one SCN) that fails
+    mid-delivery is continued by the next run at the same SCN, while the undo
+    still reaches it: only the partitions not finished are read, and the
+    load is one consistent snapshot as if it had never failed. The
+    client-flow bundle checks one run prefix and every id (a partition that
+    was in progress is read again). Needs --plugin <canonical-plugins
+    workspace> (the chaos sink is never released).
+  tags: [oracle, parquet, sink, parallel, resilience, requires-local-plugin]
+
+services:
+  - image: images/lab-oracle
+    alias: oracle
+    readiness:
+      tcp: 1521
+      timeout_seconds: 600
+      oracle:
+        service_name: FREEPDB1
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM user_constraints WHERE constraint_name = 'PK_SINK'"
+
+pipeline:
+  file: pipeline.yaml
+
+runs:
+  - env:
+      - LOADSMITH_SINK_FAIL_AFTER=20
+      - LOADSMITH_SINK_FAIL_COPIES=1
+    expect:
+      status: error
+
+expect:
+  status: success
+  logs:
+    contains:
+      - "Resumed:      run"
+      - "partitions not yet done, at its SCN"

@@ -1,0 +1,30 @@
+case:
+  name: postgres-to-jsonl-cursor
+  description: >
+    The postgres source reading through a cursor (`fetch: cursor`, DECLARE +
+    FETCH) instead of its default `COPY … TO STDOUT`, for servers without
+    COPY TO STDOUT: the same 100,000 rows.
+  tags: [postgres, jsonl, smoke]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events LIMIT 1"
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 100000
+  rows_written: 100000
+  output:
+    file: events.jsonl
+    row_count: 100000
