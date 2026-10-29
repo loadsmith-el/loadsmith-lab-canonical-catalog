@@ -1,0 +1,7 @@
+bundle:
+  name: oracle-lob
+  description: Checks that the oracle source reads a CLOB past 4000 bytes whole (JSONL output)
+
+cases:
+  - case: catalog/oracle-to-jsonl-clob
+    validate: /scripts/check_clob.py

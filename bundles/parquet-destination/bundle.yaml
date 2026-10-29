@@ -1,6 +1,6 @@
 bundle:
   name: parquet-destination
-  description: Validates the parquet destination in single-file and chunked modes
+  description: Validates the parquet destination in single-file and chunked modes, and the Oracle INTERVAL struct
 
 # Each entry reuses an existing case unchanged, then runs hook scripts that live
 # *inside the bundle image* (built from this dir's Dockerfile). validate/cleanup
@@ -11,4 +11,7 @@ cases:
     cleanup: /scripts/cleanup.sh
   - case: catalog/postgres-to-parquet-chunked
     validate: /scripts/check_chunks.py
+    cleanup: /scripts/cleanup.sh
+  - case: catalog/oracle-to-parquet-types
+    validate: /scripts/check_oracle_types.py
     cleanup: /scripts/cleanup.sh

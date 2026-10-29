@@ -1,0 +1,40 @@
+case:
+  name: postgres-to-parquet-localcopy-partitioned-resume-fine
+  description: >
+    The partitioned resume of postgres-to-parquet-localcopy-partitioned-resume
+    with `parallel.partitions: 256` instead of the default 8 × workers (16):
+    run 1 fails mid-delivery, run 2 continues it reading only the partitions
+    not finished. The client-flow bundle checks one run prefix, every id, and
+    that the rows read twice stay within two small partitions (with 16
+    partitions it is up to ~12,500). Needs --plugin <canonical-plugins
+    workspace> (the chaos sink is never released).
+  tags: [postgres, parquet, sink, parallel, resilience, requires-local-plugin]
+
+services:
+  - image: images/lab-postgres-15
+    alias: pg
+    readiness:
+      tcp: 5432
+      timeout_seconds: 300
+      postgres:
+        dbname: lab
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events LIMIT 1"
+
+pipeline:
+  file: pipeline.yaml
+
+runs:
+  - env:
+      - LOADSMITH_SINK_FAIL_AFTER=20
+      - LOADSMITH_SINK_FAIL_COPIES=1
+    expect:
+      status: error
+
+expect:
+  status: success
+  logs:
+    contains:
+      - "Resumed:      run"
+      - "partitions not yet done, at a new snapshot"

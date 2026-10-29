@@ -1,0 +1,27 @@
+pipeline:
+  name: oracle-to-parquet-types
+
+source:
+  type: oracle
+  config:
+    host: oracle
+    port: 1521
+    service_name: FREEPDB1
+    user: lab
+    password: lab
+    # seq 1..5; check_oracle_types.py computes the same values from SEQ.
+    query: >
+      SELECT event_sequence AS seq,
+             NUMTOYMINTERVAL(event_sequence * 7 - 20, 'MONTH') AS ym,
+             NUMTODSINTERVAL(event_sequence * 90061 + 0.123456789, 'SECOND') AS ds,
+             NUMTODSINTERVAL(-event_sequence * 3600.5, 'SECOND') AS ds_neg,
+             CAST(NULL AS INTERVAL DAY TO SECOND) AS ds_null
+      FROM spacecraft_telemetry_events
+      WHERE event_sequence BETWEEN 1 AND 5
+
+destination:
+  type: parquet
+  config:
+    path: /output
+    prefix: types
+    compression: snappy

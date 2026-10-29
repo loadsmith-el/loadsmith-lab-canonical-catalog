@@ -21,6 +21,8 @@ cases:
     validate: /scripts/check_local.py
   - case: catalog/postgres-to-parquet-localcopy-partitioned-resume
     validate: /scripts/check_local.py
+  - case: catalog/postgres-to-parquet-localcopy-partitioned-resume-fine
+    validate: /scripts/check_local.py
   - case: catalog/postgres-to-parquet-localcopy-partitioned-restart
     validate: /scripts/check_local.py
   - case: catalog/oracle-to-parquet-localcopy-partitioned-resume

@@ -1,0 +1,18 @@
+pipeline:
+  name: oracle-to-jsonl-clob
+
+source:
+  type: oracle
+  config:
+    host: oracle
+    port: 1521
+    service_name: FREEPDB1
+    user: lab
+    password: lab
+    query: "SELECT id, raw_data, blob_data, TO_CLOB(RPAD('x', 4000, 'x')) || RPAD('y', 4000, 'y') || clob_data AS clob_data FROM lob_roundtrip ORDER BY id"
+    batch_size: 100
+
+destination:
+  type: jsonl
+  config:
+    path: /output/lob.jsonl

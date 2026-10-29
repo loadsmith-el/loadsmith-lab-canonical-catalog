@@ -1,0 +1,29 @@
+case:
+  name: oracle-to-parquet-types
+  description: >
+    The oracle source's INTERVAL decoding: five rows of computed intervals —
+    YEAR TO MONTH (negative too), DAY TO SECOND with nine fractional digits,
+    a negative DAY TO SECOND and a NULL — read as Arrow Interval(MonthDayNano)
+    and written to Parquet as an exact struct<months, days, nanoseconds>.
+    Values are asserted by the parquet-destination bundle's validate hook.
+  tags: [oracle, parquet, types]
+
+services:
+  - image: images/lab-oracle
+    alias: oracle
+    readiness:
+      tcp: 1521
+      timeout_seconds: 600   # Oracle is slow to open the PDB + load the seed
+      oracle:
+        service_name: FREEPDB1
+        user: lab
+        password: lab
+        probe_query: "SELECT 1 FROM spacecraft_telemetry_events WHERE ROWNUM = 1"
+
+pipeline:
+  file: pipeline.yaml
+
+expect:
+  status: success
+  rows_read: 5
+  rows_written: 5

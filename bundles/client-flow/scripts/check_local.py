@@ -8,7 +8,8 @@ $LOADSMITH_LAB_CASE_NAME this checks:
   - the number of distinct run prefixes (a resumed run adds none);
   - every id of the source is there, and how many times rows were read
     twice: exactly (`dups`), or only reported (`dups: None`, a partitioned
-    load resumed after a failure re-reads its partitions in progress).
+    load resumed after a failure re-reads its partitions in progress), at
+    most `max_dups` when set.
 """
 import os
 import re
@@ -24,6 +25,10 @@ CASES = {
     "postgres-to-parquet-localcopy-partitioned-resume": {"id": "id", "runs": 1, "unique": 100_000, "dups": None},
     "postgres-to-parquet-localcopy-partitioned-restart": {"id": "id", "runs": 1, "unique": 100_000, "dups": 0},
     "oracle-to-parquet-localcopy-partitioned-resume": {"id": "ID", "runs": 1, "unique": 100_000, "dups": None},
+    # 256 partitions of ~390 rows, 2 workers: at most two in progress re-read.
+    "postgres-to-parquet-localcopy-partitioned-resume-fine": {
+        "id": "id", "runs": 1, "unique": 100_000, "dups": None, "max_dups": 1_000,
+    },
 }
 
 case = os.environ.get("LOADSMITH_LAB_CASE_NAME", "").split("/")[-1]
@@ -62,6 +67,8 @@ if tables:
         errors.append(f"expected {want['unique']} unique ids, got {unique}")
     if want["dups"] is not None and dups != want["dups"]:
         errors.append(f"expected {want['dups']} id(s) read twice, got {dups}")
+    if want.get("max_dups") is not None and dups > want["max_dups"]:
+        errors.append(f"expected at most {want['max_dups']} id(s) read twice, got {dups}")
 
 for e in errors:
     print(f"FAIL: {e}")
